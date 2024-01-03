@@ -35,7 +35,7 @@ def count():
 ######################################################################
 @app.route("/picture", methods=["GET"])
 def get_pictures():
-    pass
+    return data
 
 ######################################################################
 # GET A PICTURE
@@ -44,7 +44,10 @@ def get_pictures():
 
 @app.route("/picture/<int:id>", methods=["GET"])
 def get_picture_by_id(id):
-    pass
+    picture = next((picture for picture in data if picture['id'] == id), None)
+    if picture is None:
+        abort(404)
+    return picture
 
 
 ######################################################################
@@ -52,7 +55,21 @@ def get_picture_by_id(id):
 ######################################################################
 @app.route("/picture", methods=["POST"])
 def create_picture():
-    pass
+    picture = request.json
+    if not picture:
+        return {"message": "Invalid input parameter"}, 422
+    # code to validate picture ommited
+    isExist = next((obj for obj in data if obj['id'] == picture['id']), None)
+
+    if isExist != None:
+        print(picture)
+        return {"Message": f"picture with id {picture['id']} already present"}, 302
+    try:
+        data.append(picture)
+    except NameError:
+        return {"message": "data not defined"}, 500
+    print(picture)
+    return jsonify(picture), 201
 
 ######################################################################
 # UPDATE A PICTURE
@@ -61,11 +78,22 @@ def create_picture():
 
 @app.route("/picture/<int:id>", methods=["PUT"])
 def update_picture(id):
-    pass
+    new_picture = request.json
+
+    for index, picture in enumerate(data):
+        if picture["id"] == id:
+            data[index] = new_picture
+            return picture, 201
+    return {"message": "picture not found"}, 404
 
 ######################################################################
 # DELETE A PICTURE
 ######################################################################
 @app.route("/picture/<int:id>", methods=["DELETE"])
 def delete_picture(id):
-    pass
+    isExist = next((obj for obj in data if obj['id'] == id), None)
+    if isExist == None:
+         return {"message": "picture not found"}, 404
+    index = data.index(isExist)
+    del data[index]
+    return '', 204
